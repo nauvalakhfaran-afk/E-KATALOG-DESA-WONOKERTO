@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direktori UMKM Desa Sukamaju</title>
+<meta name="description" content="Daftar usaha mikro, kecil, dan menengah di Desa Sukamaju. Pilih dusun untuk melihat usaha yang ada di sana.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tema.css">
+
+<style>
+  /* ---- Gaya khusus halaman beranda. Hanya memakai token dari tema.css ---- */
+
+  .sampul { padding-block: clamp(40px, 5vw, 72px) clamp(48px, 6vw, 88px); }
+  .sampul__isi {
+    display: grid; gap: clamp(32px, 5vw, 64px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+    align-items: center;
+  }
+  .sampul h1 { margin-bottom: 20px; }
+  .sampul h1 em {
+    font-style: normal; color: var(--pandan-tua);
+    text-decoration: underline; text-decoration-color: var(--kunyit);
+    text-decoration-thickness: 6px; text-underline-offset: 6px;
+  }
+  .sampul__teks { font-size: var(--ukuran-sub); color: var(--teks-lembut); max-width: 46ch; }
+
+  /* Kotak pencarian */
+  .cari { position: relative; max-width: 460px; margin-top: var(--sela-3); }
+  .cari input {
+    width: 100%; padding: 15px 18px;
+    font-family: var(--font-teks); font-size: var(--ukuran-teks); color: var(--teks);
+    background: var(--kapur-terang);
+    border: 1.5px solid var(--garis-tebal); border-radius: var(--lengkung-kecil);
+  }
+  .cari input::placeholder { color: var(--nila-kabut); }
+  .cari input:focus { border-color: var(--nila); outline: none; box-shadow: 0 0 0 4px var(--kunyit-kabut); }
+  .cari__hasil {
+    position: absolute; z-index: 20; inset-inline: 0; top: calc(100% + 8px);
+    background: var(--kapur-terang); border: 1.5px solid var(--nila);
+    border-radius: var(--lengkung); box-shadow: var(--bayang-naik);
+    max-height: 320px; overflow-y: auto; padding: 6px;
+  }
+  .cari__hasil a {
+    display: block; padding: 10px 12px; border-radius: var(--lengkung-kecil);
+    text-decoration: none; line-height: 1.35;
+  }
+  .cari__hasil a:hover, .cari__hasil a:focus-visible { background: var(--pandan-kabut); }
+  .cari__hasil strong { display: block; font-size: var(--ukuran-kecil); font-weight: 700; }
+  .cari__hasil span {
+    font-family: var(--font-data); font-size: var(--ukuran-data);
+    letter-spacing: .08em; text-transform: uppercase; color: var(--teks-lembut);
+  }
+  .cari__kosong { padding: 14px 12px; font-size: var(--ukuran-kecil); color: var(--teks-lembut); }
+
+  /* ---- DENAH DUSUN: elemen utama halaman ---- */
+  .denah { position: relative; }
+  .denah__bingkai {
+    background: var(--kapur-terang);
+    border: 1.5px solid var(--nila);
+    border-radius: var(--lengkung);
+    padding: 18px 18px 12px;
+    box-shadow: var(--bayang);
+  }
+  .denah__kepala {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--garis-tebal);
+    font-family: var(--font-data); font-size: var(--ukuran-data);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--teks-lembut);
+  }
+  .denah svg { width: 100%; height: auto; display: block; }
+
+  .petak path {
+    stroke: var(--kapur-terang); stroke-width: 3; stroke-linejoin: round;
+    transition: fill var(--transisi), transform var(--transisi);
+  }
+  .petak text { pointer-events: none; }
+  .petak__nama {
+    font-family: var(--font-judul); font-size: 15px; font-weight: 700;
+    fill: var(--nila);
+  }
+  .petak__jml {
+    font-family: var(--font-data); font-size: 10.5px; letter-spacing: .12em;
+    fill: var(--pandan-tua);
+  }
+  .petak:hover path, .petak:focus-visible path, .petak.sorot path { fill: var(--kunyit); }
+  .petak:hover .petak__jml, .petak.sorot .petak__jml { fill: var(--nila); }
+  .petak:focus-visible { outline: none; }
+  .petak:focus-visible path { stroke: var(--nila); stroke-width: 4; }
+
+  .denah__jalan { fill: none; stroke: var(--kapur-terang); stroke-width: 7; stroke-linecap: round; }
+  .denah__jalan-garis { fill: none; stroke: var(--nila-kabut); stroke-width: 1.5; stroke-dasharray: 9 9; }
+  .denah__kaki {
+    margin-top: 10px; display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
+    font-family: var(--font-data); font-size: var(--ukuran-data); color: var(--nila-kabut);
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+
+  /* Pita angka */
+  .pita { background: var(--nila); color: var(--kapur-terang); }
+  .pita__isi {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--sela-3); padding-block: 26px;
+  }
+  .pita__butir strong {
+    display: block; font-family: var(--font-judul); font-size: 2rem; line-height: 1; color: #fff;
+  }
+  .pita__butir span {
+    font-family: var(--font-data); font-size: var(--ukuran-data);
+    letter-spacing: .14em; text-transform: uppercase; color: rgba(246,248,241,.6);
+  }
+
+  /* Ajakan mendaftar */
+  .ajakan {
+    background: var(--pandan-tua); color: var(--kapur-terang);
+    border-radius: var(--lengkung); padding: clamp(28px, 4vw, 48px);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: var(--sela-3);
+  }
+  .ajakan h2 { color: #fff; margin-bottom: 8px; }
+  .ajakan p { color: rgba(246,248,241,.8); margin: 0; }
+
+  @media (max-width: 900px) {
+    .sampul__isi { grid-template-columns: 1fr; }
+    .denah { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<header data-situs-header></header>
+
+<main>
+
+  <!-- ====================== SAMPUL ====================== -->
+  <section class="sampul">
+    <div class="wadah sampul__isi">
+
+      <div>
+        <p class="eyebrow">Pendataan usaha warga</p>
+        <h1>Semua usaha warga desa, <em>satu per dusun</em>.</h1>
+        <p class="sampul__teks">
+          Mulai dari petak dusun di sebelah. Klik satu blok untuk melihat siapa saja
+          yang berjualan di sana, apa yang dijual, dan nomor yang bisa dihubungi.
+        </p>
+
+        <div class="cari">
+          <label class="hanya-pembaca-layar" for="kotakCari">Cari nama usaha atau produk</label>
+          <input id="kotakCari" type="search" autocomplete="off"
+                 placeholder="Cari nama usaha, produk, atau pemilik…">
+          <div class="cari__hasil tersembunyi" id="hasilCari"></div>
+        </div>
+      </div>
+
+      <!-- ---- Denah dusun ---- -->
+      <div class="denah">
+        <div class="denah__bingkai">
+          <div class="denah__kepala">
+            <span>Denah dusun</span>
+            <span id="petakTerpilih">Arahkan ke petak</span>
+          </div>
+
+          <svg viewBox="0 0 528 400" role="group" aria-label="Denah enam dusun, pilih salah satu">
+            <g id="petakDusun"></g>
+            <!-- jalan desa membelah dusun atas dan bawah -->
+            <path class="denah__jalan"       d="M28 190 L196 176 L356 190 L500 208"></path>
+            <path class="denah__jalan-garis" d="M28 190 L196 176 L356 190 L500 208"></path>
+            <text x="30" y="382" class="petak__jml">JALAN DESA &mdash; GARIS PUTUS</text>
+          </svg>
+
+          <div class="denah__kaki">
+            <span>Skema, bukan peta ukur</span>
+            <span>Blok A &ndash; F</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================== PITA ANGKA ====================== -->
+  <section class="pita">
+    <div class="wadah pita__isi" id="pitaAngka"></div>
+  </section>
+
+  <!-- ====================== DAFTAR DUSUN ====================== -->
+  <section class="bagian" id="dusun">
+    <div class="wadah">
+      <div class="kepala-bagian">
+        <div>
+          <p class="eyebrow">Pilih dusun</p>
+          <h2>Enam dusun, enam kumpulan usaha</h2>
+        </div>
+        <p>Tiap dusun punya ciri sendiri. Klik untuk membuka daftar lengkapnya.</p>
+      </div>
+      <div class="kisi kisi--3" id="kisiDusun"></div>
+    </div>
+  </section>
+
+  <!-- ====================== KATEGORI ====================== -->
+  <section class="bagian bagian--rapat">
+    <div class="wadah">
+      <p class="eyebrow">Jenis usaha</p>
+      <h2 style="margin-bottom:var(--sela-3)">Yang dikerjakan warga</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:10px" id="daftarKategori"></div>
+    </div>
+  </section>
+
+  <!-- ====================== SOROTAN ====================== -->
+  <section class="bagian">
+    <div class="wadah">
+      <div class="kepala-bagian">
+        <div>
+          <p class="eyebrow">Baru terdata</p>
+          <h2>Usaha yang baru masuk daftar</h2>
+        </div>
+      </div>
+      <div class="kisi kisi--4" id="kisiSorotan"></div>
+    </div>
+  </section>
+
+  <!-- ====================== AJAKAN ====================== -->
+  <section class="bagian bagian--rapat">
+    <div class="wadah">
+      <div class="ajakan">
+        <div>
+          <p class="eyebrow">Belum terdaftar?</p>
+          <h2>Daftarkan usaha Anda</h2>
+          <p>Bawa nama usaha, jenis produk, dan nomor aktif ke kantor desa, atau kirim lewat WhatsApp.</p>
+        </div>
+        <a class="tombol tombol--kunyit" id="tautanDaftar" href="#">Kirim data usaha</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer data-situs-footer></footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/situs.js"></script>
+<script>
+/* ---- Bentuk petak denah: kode blok -> jalur SVG dan titik label ---- */
+const PETAK = {
+  A: { d: "M40 50 L200 30 L196 176 L28 190 Z",    x: 114, y: 104, isi: "#CBD9C9" },
+  B: { d: "M200 30 L360 44 L356 190 L196 176 Z",  x: 278, y: 100, isi: "#DDE5D3" },
+  C: { d: "M360 44 L490 70 L500 208 L356 190 Z",  x: 428, y: 124, isi: "#C2D2C4" },
+  D: { d: "M28 190 L196 176 L212 362 L54 340 Z",  x: 122, y: 262, isi: "#D6E0CF" },
+  E: { d: "M196 176 L356 190 L368 344 L212 362 Z",x: 284, y: 264, isi: "#C8D7C7" },
+  F: { d: "M356 190 L500 208 L486 320 L368 344 Z",x: 428, y: 260, isi: "#E0E7D7" }
+};
+
+const a = Situs.aman;
+
+/* 1. Gambar denah */
+document.getElementById("petakDusun").innerHTML = DUSUN.map(d => {
+  const p = PETAK[d.peta];
+  if (!p) return "";
+  const jml = Situs.jumlah(d.slug);
+  return `
+    <a class="petak" href="dusun.html?d=${a(d.slug)}" data-petak="${a(d.slug)}"
+       aria-label="${a(d.nama)}, ${jml} usaha">
+      <path d="${p.d}" fill="${p.isi}"></path>
+      <text class="petak__nama" x="${p.x}" y="${p.y}" text-anchor="middle">${a(d.nama.replace("Dusun ", ""))}</text>
+      <text class="petak__jml"  x="${p.x}" y="${p.y + 18}" text-anchor="middle">${jml} USAHA</text>
+    </a>`;
+}).join("");
+
+/* 2. Pita angka */
+document.getElementById("pitaAngka").innerHTML = [
+  [UMKM.length, "usaha terdata"],
+  [DUSUN.length, "dusun"],
+  [Situs.kategori().length, "jenis usaha"],
+  [SITUS.tahunData, "pembaruan terakhir"]
+].map(([n, t]) => `<div class="pita__butir"><strong>${a(n)}</strong><span>${a(t)}</span></div>`).join("");
+
+/* 3. Kartu dusun */
+document.getElementById("kisiDusun").innerHTML = DUSUN.map(Situs.kartuDusun).join("");
+
+/* 4. Kategori */
+document.getElementById("daftarKategori").innerHTML = Situs.kategori()
+  .map(k => `<span class="pil">${a(k.nama)} &middot; ${k.jml}</span>`).join("");
+
+/* 5. Sorotan: empat usaha terakhir pada data */
+document.getElementById("kisiSorotan").innerHTML =
+  UMKM.slice(-4).reverse().map(Situs.kartuUmkm).join("");
+
+/* 6. Tautan pendaftaran */
+document.getElementById("tautanDaftar").href =
+  Situs.wa(SITUS.telepon) + "?text=" +
+  encodeURIComponent("Halo, saya ingin mendaftarkan usaha saya ke direktori UMKM " + SITUS.namaDesa + ".");
+
+/* 7. Petak dan kartu saling menyorot */
+const label = document.getElementById("petakTerpilih");
+document.querySelectorAll("[data-petak]").forEach(petak => {
+  const slug = petak.dataset.petak;
+  const kartu = document.querySelector(`.kartu-dusun[data-dusun="${slug}"]`);
+  const nyala = () => {
+    kartu?.classList.add("sorot");
+    label.textContent = Situs.dusun(slug).nama + " — " + Situs.jumlah(slug) + " usaha";
+  };
+  const padam = () => {
+    kartu?.classList.remove("sorot");
+    label.textContent = "Arahkan ke petak";
+  };
+  petak.addEventListener("mouseenter", nyala);
+  petak.addEventListener("focus", nyala);
+  petak.addEventListener("mouseleave", padam);
+  petak.addEventListener("blur", padam);
+});
+document.querySelectorAll(".kartu-dusun").forEach(kartu => {
+  const petak = document.querySelector(`[data-petak="${kartu.dataset.dusun}"]`);
+  kartu.addEventListener("mouseenter", () => petak?.classList.add("sorot"));
+  kartu.addEventListener("mouseleave", () => petak?.classList.remove("sorot"));
+});
+
+/* 8. Pencarian cepat */
+const kotak = document.getElementById("kotakCari");
+const hasil = document.getElementById("hasilCari");
+
+kotak.addEventListener("input", () => {
+  const kunci = kotak.value.trim().toLowerCase();
+  if (kunci.length < 2) { hasil.classList.add("tersembunyi"); return; }
+
+  const cocok = UMKM.filter(u =>
+    (u.nama + " " + u.kategori + " " + u.pemilik + " " + u.deskripsi).toLowerCase().includes(kunci)
+  ).slice(0, 7);
+
+  hasil.innerHTML = cocok.length
+    ? cocok.map(u => `
+        <a href="dusun.html?d=${a(u.dusun)}#${a(u.id)}">
+          <strong>${a(u.nama)}</strong>
+          <span>${a(Situs.dusun(u.dusun).nama)} &middot; ${a(u.kategori)}</span>
+        </a>`).join("")
+    : `<p class="cari__kosong">Tidak ada usaha yang cocok. Coba kata lain, misalnya “keripik” atau “jahit”.</p>`;
+
+  hasil.classList.remove("tersembunyi");
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".cari")) hasil.classList.add("tersembunyi");
+});
+kotak.addEventListener("keydown", e => {
+  if (e.key === "Escape") { hasil.classList.add("tersembunyi"); kotak.blur(); }
+});
+</script>
+</body>
+</html>
