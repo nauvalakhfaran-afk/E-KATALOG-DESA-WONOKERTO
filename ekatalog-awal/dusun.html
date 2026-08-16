@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusun — Direktori UMKM Desa Sukamaju</title>
+<meta name="description" content="Daftar UMKM per dusun di Desa Sukamaju.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tema.css">
+
+<style>
+  /* Kepala halaman dusun */
+  .judul-dusun { padding-block: var(--sela-4) var(--sela-3); }
+  .judul-dusun__baris {
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: var(--sela-3);
+  }
+  .judul-dusun h1 { font-size: clamp(2rem, 4.6vw, 3.2rem); margin-bottom: 10px; }
+  .judul-dusun__angka {
+    text-align: right; font-family: var(--font-judul); font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4rem); line-height: .9; color: var(--pandan-tua);
+  }
+  .judul-dusun__angka span {
+    display: block; font-family: var(--font-data); font-size: var(--ukuran-data);
+    letter-spacing: .14em; color: var(--teks-lembut); font-weight: 400;
+  }
+  .saring { display: flex; flex-wrap: wrap; gap: 8px; margin-block: var(--sela-3) var(--sela-4); }
+  .saring button { border: 0; cursor: pointer; font-family: inherit; }
+  .lompat-dusun { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+
+<header data-situs-header></header>
+
+<main class="wadah">
+  <p class="remah" id="remah"></p>
+
+  <section class="judul-dusun" id="kepalaDusun"></section>
+
+  <div class="saring" id="saringKategori"></div>
+
+  <section style="padding-bottom:var(--sela-5)">
+    <div class="kisi kisi--3" id="isiHalaman"></div>
+  </section>
+</main>
+
+<footer data-situs-footer></footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/situs.js"></script>
+<script>
+const a = Situs.aman;
+const slug = Situs.param("d");
+const dusun = slug ? Situs.dusun(slug) : null;
+
+const remah    = document.getElementById("remah");
+const kepala   = document.getElementById("kepalaDusun");
+const saring   = document.getElementById("saringKategori");
+const isi      = document.getElementById("isiHalaman");
+
+/* ---------- Mode 1: tidak ada ?d= → tampilkan semua dusun ---------- */
+if (!slug) {
+  remah.innerHTML = `<a href="index.html">Beranda</a> / Dusun`;
+  kepala.innerHTML = `
+    <p class="eyebrow">Enam dusun</p>
+    <h1>Daftar dusun</h1>
+    <p>Pilih satu dusun untuk melihat usaha yang ada di dalamnya.</p>`;
+  isi.innerHTML = DUSUN.map(Situs.kartuDusun).join("");
+  document.title = "Dusun — Direktori UMKM " + SITUS.namaDesa;
+}
+
+/* ---------- Mode 2: slug tidak dikenal ---------- */
+else if (!dusun) {
+  remah.innerHTML = `<a href="index.html">Beranda</a> / <a href="dusun.html">Dusun</a> / Tidak ditemukan`;
+  kepala.innerHTML = "";
+  isi.className = "";
+  isi.innerHTML = `
+    <div class="kosong">
+      <h3>Dusun tidak ditemukan</h3>
+      <p>Alamat yang dibuka tidak cocok dengan dusun mana pun dalam data.</p>
+      <a class="tombol" href="dusun.html">Lihat daftar dusun</a>
+    </div>`;
+}
+
+/* ---------- Mode 3: satu dusun ---------- */
+else {
+  const daftar = Situs.umkmDusun(slug);
+  document.title = dusun.nama + " — Direktori UMKM " + SITUS.namaDesa;
+
+  remah.innerHTML = `<a href="index.html">Beranda</a> / <a href="dusun.html">Dusun</a> / ${a(dusun.nama)}`;
+
+  kepala.innerHTML = `
+    <div class="judul-dusun__baris">
+      <div>
+        <p class="eyebrow">Blok ${a(dusun.peta)} &middot; Kepala dusun ${a(dusun.kepala)}</p>
+        <h1>${a(dusun.nama)}</h1>
+        <p>${a(dusun.tagline)}</p>
+      </div>
+      <div class="judul-dusun__angka">${daftar.length}<span>USAHA TERDATA</span></div>
+    </div>`;
+
+  const kategori = Situs.kategori(daftar);
+  saring.innerHTML =
+    `<button class="pil pil--aktif" data-saring="semua">Semua &middot; ${daftar.length}</button>` +
+    kategori.map(k => `<button class="pil" data-saring="${a(k.nama)}">${a(k.nama)} &middot; ${k.jml}</button>`).join("");
+
+  const gambar = (pilihan) => {
+    const tampil = pilihan === "semua" ? daftar : daftar.filter(u => u.kategori === pilihan);
+    isi.innerHTML = tampil.length
+      ? tampil.map(Situs.kartuUmkm).join("")
+      : `<div class="kosong"><h3>Belum ada usaha di jenis ini</h3><p>Pilih jenis lain di atas.</p></div>`;
+  };
+  gambar("semua");
+
+  saring.addEventListener("click", e => {
+    const tombol = e.target.closest("[data-saring]");
+    if (!tombol) return;
+    saring.querySelectorAll("button").forEach(b => b.classList.remove("pil--aktif"));
+    tombol.classList.add("pil--aktif");
+    gambar(tombol.dataset.saring);
+  });
+
+  /* Lompat ke satu usaha jika alamat memuat #id */
+  if (location.hash) {
+    const sasaran = document.querySelector(location.hash);
+    if (sasaran) { sasaran.scrollIntoView({ block: "center" }); sasaran.classList.add("sorot"); }
+  }
+
+  /* Tautan ke dusun lain di bawah daftar */
+  const lain = DUSUN.filter(d => d.slug !== slug);
+  isi.insertAdjacentHTML("afterend", `
+    <div style="margin-top:var(--sela-5);padding-top:var(--sela-3);border-top:1px solid var(--garis)">
+      <p class="eyebrow">Dusun lain</p>
+      <div class="lompat-dusun">
+        ${lain.map(d => `<a class="pil" href="dusun.html?d=${a(d.slug)}">${a(d.nama)} &middot; ${Situs.jumlah(d.slug)}</a>`).join("")}
+      </div>
+    </div>`);
+}
+</script>
+</body>
+</html>

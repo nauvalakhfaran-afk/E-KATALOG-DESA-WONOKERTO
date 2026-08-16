@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tentang — Direktori UMKM Desa Sukamaju</title>
+<meta name="description" content="Tentang pendataan UMKM Desa Sukamaju dan cara mendaftarkan usaha.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tema.css">
+
+<style>
+  .langkah { counter-reset: langkah; display: grid; gap: var(--sela-3); margin-top: var(--sela-4); }
+  .langkah li {
+    counter-increment: langkah; list-style: none; position: relative;
+    padding-left: 56px; max-width: 66ch;
+  }
+  .langkah li::before {
+    content: counter(langkah, decimal-leading-zero);
+    position: absolute; left: 0; top: 2px;
+    font-family: var(--font-data); font-size: var(--ukuran-data);
+    letter-spacing: .1em; color: var(--nila);
+    background: var(--kunyit); padding: 6px 10px; border-radius: var(--lengkung-kecil);
+  }
+  .langkah h3 { margin-bottom: 4px; }
+  .langkah p { margin: 0; color: var(--teks-lembut); font-size: var(--ukuran-kecil); }
+</style>
+</head>
+<body>
+
+<header data-situs-header></header>
+
+<main class="wadah">
+  <p class="remah"><a href="index.html">Beranda</a> / Tentang</p>
+
+  <section class="bagian">
+    <p class="eyebrow">Tentang direktori</p>
+    <h1>Pendataan usaha warga</h1>
+    <p>
+      Halaman ini merangkum usaha mikro dan kecil yang dijalankan warga di enam dusun.
+      Tujuannya sederhana: memudahkan warga desa dan pembeli dari luar menemukan
+      siapa menjual apa, tanpa harus bertanya ke banyak orang.
+    </p>
+    <p>
+      Data dikumpulkan oleh perangkat desa bersama ketua RT, lalu diperbarui secara berkala.
+      Bila ada nama, nomor, atau jam buka yang keliru, kabari kami agar segera dibetulkan.
+    </p>
+
+    <p class="eyebrow" style="margin-top:var(--sela-5)">Cara mendaftar</p>
+    <h2>Tiga langkah mendaftarkan usaha</h2>
+    <ol class="langkah">
+      <li>
+        <h3>Siapkan keterangan usaha</h3>
+        <p>Nama usaha, nama pemilik, jenis produk, alamat RT/RW, jam buka, dan nomor WhatsApp aktif.</p>
+      </li>
+      <li>
+        <h3>Serahkan ke kantor desa atau ketua RT</h3>
+        <p>Bisa datang langsung pada jam kerja, atau kirim lewat WhatsApp nomor di bawah.</p>
+      </li>
+      <li>
+        <h3>Tunggu pembaruan berikutnya</h3>
+        <p>Data yang masuk akan tampil pada pembaruan halaman berikutnya, biasanya tiap awal bulan.</p>
+      </li>
+    </ol>
+
+    <a class="tombol" id="tautanDaftar" href="#" style="margin-top:var(--sela-4)">Kirim data lewat WhatsApp</a>
+  </section>
+</main>
+
+<footer data-situs-footer></footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/situs.js"></script>
+<script>
+  document.getElementById("tautanDaftar").href =
+    Situs.wa(SITUS.telepon) + "?text=" +
+    encodeURIComponent("Halo, saya ingin mendaftarkan usaha saya ke direktori UMKM " + SITUS.namaDesa + ".");
+</script>
+</body>
+</html>
